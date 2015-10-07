@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Excel-DNA.Interop</id>
+    <version>14.0.1</version>
+    <title>Excel-DNA - Primary Interop Assemblies for Excel 2010</title>
+    <authors>Govert van Drimmelen</authors>
+    <owners>Govert van Drimmelen</owners>
+    <projectUrl>http://excel-dna.net/</projectUrl>
+    <iconUrl>http://docs.excel-dna.net/NuGetIcon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides a local copy of the following assemblies from the Microsoft Office 2010: Primary Interop Assemblies Redistributable - Microsoft.Office.Interop.Excel.dll, Office.dll, Microsoft.Vbe.Interop.dll.</description>
+    <summary>Provides a selection of Excel 2010 Primary Interop Assemblies</summary>
+    <tags>Excel Interop PIA ExcelDna</tags>
+  </metadata>
+</package>
