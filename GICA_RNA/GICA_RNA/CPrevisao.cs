@@ -102,7 +102,7 @@ namespace GICA_RNA
             //lista contendo todos os ids de 1 a 52
             List<int> ids = Serie.Ids;
             //variavel que possuirá o id binário
-            int[] id = new int[6];           
+            int[] id = new int[6];
 
             // número de amostras para a aprendizagem
             int samples = RNA.DadosTreino.Length/2 - RNA.WindowSize - RNA.PredictionSize;
@@ -203,30 +203,23 @@ namespace GICA_RNA
                                 contador++;
                             }
                         }//fim do else
-                    }//fim do for interno
-
-                    List<double> diferenca = new List<double>();
-                    List<double> diferencaIn = new List<double>();
+                    }//fim do for interno                          
 
                     //computa a saída da rede e armazena o dado solution diferenca
                     for (int k = 0; k < RNA.Network.Compute(networkInput).Length; k++)
-                        diferenca.Add((RNA.Network.Compute(networkInput)[k] + 1.0) / fatorNormal + Serie.Min);
-
-                    //converte o dado(diferença) para valores normal
-                    diferencaIn = Serie.DiferencaInversa(diferenca, RNA.DadosTreino[RNA.WindowSize + i, 1]);
-
-                    //armazena em solution
-                    for (int k = 0; k < diferencaIn.Count - 1; k++)
-                        if ((i + k) <= solutionSize) solution[i + k, 1] = diferencaIn[k];
+                    {
+                        double diferenca = (RNA.Network.Compute(networkInput)[k] + 1.0) / fatorNormal + Serie.Min;
+                        if ((i + k) < solutionSize) solution[i + k, 1] = (diferenca) + Serie.Dados[RNA.WindowSize + i, 1];
+                    }
 
                     //calcula o erro de aprendizagem
                     amostra++;
                     
                     //variaveis auxiliares do u theil
-                    somaY += ((RNA.DadosTreino[RNA.WindowSize + i, 1]) * (RNA.DadosTreino[RNA.WindowSize + i, 1]));
+                    somaY += ((Serie.Dados[RNA.WindowSize + i, 1]) * (Serie.Dados[RNA.WindowSize + i, 1]));
                     somaF += ((solution[i, 1] * solution[i, 1]));
 
-                    learningError += ((solution[i, 1] - RNA.DadosTreino[RNA.WindowSize + i, 1]) * (solution[i, 1] - RNA.DadosTreino[RNA.WindowSize + i, 1]));
+                    learningError += ((solution[i, 1] - Serie.Dados[RNA.WindowSize + i + 1, 1]) * (solution[i, 1] - Serie.Dados[RNA.WindowSize + i, 1]));
 
                 }//fim do for externo
 
