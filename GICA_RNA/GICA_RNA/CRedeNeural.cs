@@ -12,6 +12,7 @@ namespace GICA_RNA
 {
     class CRedeNeural
     {
+
         #region Atributos
 
         private List<int> neurons = null;
