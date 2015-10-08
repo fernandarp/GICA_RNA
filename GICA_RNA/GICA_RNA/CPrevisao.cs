@@ -84,6 +84,8 @@ namespace GICA_RNA
 
             resultTreino = Treino();
 
+            resultTeste = Prever(RNA.DadosTeste, RNA.DadosValidacao);
+
             return null;
         }
 
@@ -236,6 +238,111 @@ namespace GICA_RNA
                 if (iteration > 400)
                     break;
             }//fim do while
+
+            return solution;
+        }
+
+        private void Validacao()
+        {
+            //LEMBRAR QUE RNA.DADOSTREINO/RNA.DADOSTESTE/RNA.DADOSVALIDACAO ESTÃO NA DIFERENÇA. SE QUISER OS VALORES REAIS, TEM QUE PEGAR EM SERIE.DADOS.
+        }
+
+        private void Teste()
+        {
+            //LEMBRAR QUE RNA.DADOSTREINO/RNA.DADOSTESTE/RNA.DADOSVALIDACAO ESTÃO NA DIFERENÇA. SE QUISER OS VALORES REAIS, TEM QUE PEGAR EM SERIE.DADOS.
+        }
+
+        private double[,] Prever(double[,] dadosBase, double[,] dadosAuxiliares)
+        {
+            RNA.Network = (ActivationNetwork)ActivationNetwork.Load(@"C:\Users\Paulo\Desktop\NetworkTest.bin");
+
+            //criação da lista de dados provisória usada na previsão
+            List<double> dadosPrevisao = new List<double>();
+
+            List<double> diferenca = new List<double>();
+            List<double> diferencaInv = new List<double>();
+
+            //lista contendo todos os ids de 1 a 52
+            List<int> ids = Serie.Ids;
+            //variavel que possuirá o id binário
+            int[] id = new int[6];
+
+            int tamanhoAux = (dadosAuxiliares.Length / 2);
+
+            //inicio do processo de adição de dados à lista fazendo que 
+            //o primeiro ponto previsto seja exatamente o ultimo dos dados auxiliares
+            int con = (dadosAuxiliares.Length/2) - RNA.WindowSize - 1;
+
+            for (int i = con; i < tamanhoAux; i++)
+            {
+                //adiciona os valosres de data, a lista de dados para treino primeiro
+                dadosPrevisao.Add(dadosAuxiliares[i, 1]);
+            }
+
+            //definição do tamanho da solução, deve ser do tamanho do teste mais um
+            int solutionSize = dadosBase.Length/2 + 1;
+            double[,] solution = new double[solutionSize, 2];
+
+            //definição do tamanho da entrada da rede neural para a previsão
+            double[] networkInput = new double[RNA.WindowSize + RNA.PredictionSize * 6];
+
+            //Adição dos pontos x ao vetor solução, estes serão usados para a impressão em tela
+            //o primeiro ponto é exatamente o ultimo do vetor de dados auxiliares
+            solution[0, 0] = dadosAuxiliares[tamanhoAux - 1, 0] + 1;
+
+            //os proximos são retirados do vetor base
+            for (int j = 0; j < solutionSize - 1; j++)
+            {
+                //extrai do vetor que armazena o valor x dos pontos para teste
+                solution[j + 1, 0] = dadosBase[j, 0] + 1;
+            }
+
+            //variavel auxiliar para o id binário
+            int contador = 0;
+
+             //inicia processo de predição deslocando de um por um os pontos previstos
+            for (int i = 0, n = dadosBase.Length/2 + 1; i < n; i = i + RNA.PredictionSize)
+            {
+                int a = RNA.WindowSize;
+                contador = 0;
+                // seta os valores da atual janela de previsão como entrada da rede neural
+                for (int j = 0; j < RNA.WindowSize + RNA.PredictionSize; j++)
+                {
+                    if (j < RNA.WindowSize)
+                    {
+                        //entrada tem de ser formatada
+                        networkInput[j] = (dadosPrevisao[i + j] - Serie.Min) * fatorNormal - 1.0;
+                    }
+                    else
+                    {
+                        id = CUtil.ConversaoBinario(ids[con + i + a]);
+                        a++;
+
+                        for (int c = 0; c < 6; c++)
+                        {
+                            networkInput[RNA.WindowSize + contador] = id[c];
+                            contador++;
+                        }
+                    }
+                }//fim do for interno
+
+
+
+                for (int k = 0; k < RNA.Network.Compute(networkInput).Length; k++)
+                {
+                    if ((i + k) < solutionSize)
+                    {
+                        diferenca.Add((RNA.Network.Compute(networkInput)[k] + 1.0) / fatorNormal + Serie.Min);                        
+                        dadosPrevisao.Add((RNA.Network.Compute(networkInput)[k] + 1.0) / fatorNormal + Serie.Min);
+                    }
+                }
+                
+            }//fim do for externo
+
+            diferencaInv = Serie.DiferencaInversa(diferenca, dadosAuxiliares[dadosAuxiliares.Length/2 - 1, 1]);
+
+            for (int b = 0; b < diferencaInv.Count - 1; b++)
+                solution[b, 1] = diferencaInv[b];
 
             return solution;
         }
