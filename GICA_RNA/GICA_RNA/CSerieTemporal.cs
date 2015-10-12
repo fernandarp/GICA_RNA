@@ -21,9 +21,13 @@ namespace GICA_RNA
         private double max = -1000;
         private double min = 1000;
 
-        CRedeNeural rede;
-
+        //Variáveis de dados
+        private double[,] dadosTreino;
+        private double[,] dadosValidacao;
+        private double[,] dadosTeste; 
+        
         #endregion
+
 
 
         #region Propriedades
@@ -49,7 +53,21 @@ namespace GICA_RNA
             get { return min; }
         }
 
+        public double[,] DadosTreino
+        {
+            get { return dadosTreino; }
+        }
+        public double[,] DadosValidacao
+        {
+            get { return dadosValidacao; }
+        }
+        public double[,] DadosTeste
+        {
+            get { return dadosTeste; }
+        }
+
         #endregion
+
 
 
         #region Construtor
@@ -59,15 +77,15 @@ namespace GICA_RNA
         /// </summary>
         /// <param name="dadosST"></param>
         /// <param name="xInicialST"></param>
-        public CSerieTemporal(List<double> dadosST, CRedeNeural RNA, int xInicialST = 1)
+        public CSerieTemporal(List<double> dadosST, int xInicialST = 1)
         {
-            rede = RNA;
             dadosXY = UpdateDados(dadosST, xInicialST);
             dados = dadosST;
             xInicial = xInicialST;
         }
 
         #endregion
+
 
 
         #region Métodos
@@ -171,7 +189,7 @@ namespace GICA_RNA
             {
                 tamanhoTreino = (dadosDiferenca.Count) * 60 / 100;
                 tamanhoValidacao = (dadosDiferenca.Count) * 20 / 100;
-                rede.DadosTeste = new double[dadosDiferenca.Count - (tamanhoTreino + tamanhoValidacao), 2];
+                dadosTeste = new double[dadosDiferenca.Count - (tamanhoTreino + tamanhoValidacao), 2];
             }
             else
             {
@@ -180,21 +198,21 @@ namespace GICA_RNA
             }
 
             //Instancia dos dados de treino e de validação
-            rede.DadosTreino = new double[tamanhoTreino, 2];
-            rede.DadosValidacao = new double[tamanhoValidacao, 2];
+            dadosTreino = new double[tamanhoTreino, 2];
+            dadosValidacao = new double[tamanhoValidacao, 2];
 
             //carregamento a partir dos dados totais para dados de treino
             for (int i = 0; i < tamanhoTreino; i++)
             {
-                rede.DadosTreino[i, 0] = ids[i];
-                rede.DadosTreino[i, 1] = dadosDiferenca[i];
+                dadosTreino[i, 0] = ids[i];
+                dadosTreino[i, 1] = dadosDiferenca[i];
             }
 
             //carregamento a partir dos dados totais para dados de validacao
             for (int i = tamanhoTreino; i < tamanhoTreino + tamanhoValidacao; i++)
             {
-                rede.DadosValidacao[i - tamanhoTreino, 0] = ids[i];
-                rede.DadosValidacao[i - tamanhoTreino, 1] = dadosDiferenca[i];
+                dadosValidacao[i - tamanhoTreino, 0] = ids[i];
+                dadosValidacao[i - tamanhoTreino, 1] = dadosDiferenca[i];
             }
 
             if (Teste == true)
@@ -202,8 +220,8 @@ namespace GICA_RNA
                 //carregamento a partir dos dados totais para dados de validacao
                 for (int i = tamanhoTreino + tamanhoValidacao; i < dadosDiferenca.Count; i++)
                 {
-                    rede.DadosTeste[i - (tamanhoTreino + tamanhoValidacao), 0] = ids[i];
-                    rede.DadosTeste[i - (tamanhoTreino + tamanhoValidacao), 1] = dadosDiferenca[i];
+                    dadosTeste[i - (tamanhoTreino + tamanhoValidacao), 0] = ids[i];
+                    dadosTeste[i - (tamanhoTreino + tamanhoValidacao), 1] = dadosDiferenca[i];
                 }
             }
 
