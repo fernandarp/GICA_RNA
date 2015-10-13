@@ -13,7 +13,6 @@ namespace GICA_RNA
         private double[,] dadosXY;
 
         private List<double> dados = new List<double>();
-        private List<int> ids = new List<int>();
         private List<double> dadosDiferenca = new List<double>();        
         private int xInicial = 1;
 
@@ -26,17 +25,13 @@ namespace GICA_RNA
         #endregion
 
 
+
         #region Propriedades
 
         public double[,] Dados
         {
             get { return dadosXY; }
             set { if (dadosXY != value) dadosXY = value; }
-        }
-
-        public List<int> Ids
-        {
-            get { return ids; }
         }
 
         public double Max
