@@ -68,7 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CPrevisao.cs" />
+    <Compile Include="Purgatório\CPrevisao.cs" />
     <Compile Include="CRedeNeural.cs" />
     <Compile Include="CSerieTemporal.cs" />
     <Compile Include="CUtil.cs" />

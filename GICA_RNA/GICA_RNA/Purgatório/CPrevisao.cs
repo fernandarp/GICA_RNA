@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +32,7 @@ namespace GICA_RNA
         private Thread workerThread = null; //thread do aprendizado
         private Thread validationThread = null; //thread utilizada na validação
         private volatile bool needToStop = false; //variável auxiliar que define quando o processo de treino acaba
+
 
         //Variáveis dos resultados relativos a previsão
         private double[,] resultTreino;
@@ -85,7 +86,9 @@ namespace GICA_RNA
 
             resultTreino = Treino();
 
-            resultTeste = Prever(RNA.DadosTeste, RNA.DadosValidacao);
+            int indiceID = RNA.DadosValidacao.Length / 2 + RNA.DadosTreino.Length / 2; 
+
+            resultTeste = Prever(RNA.DadosTeste, RNA.DadosValidacao, indiceID);
 
             return null;
         }
@@ -253,7 +256,7 @@ namespace GICA_RNA
             //LEMBRAR QUE RNA.DADOSTREINO/RNA.DADOSTESTE/RNA.DADOSVALIDACAO ESTÃO NA DIFERENÇA. SE QUISER OS VALORES REAIS, TEM QUE PEGAR EM SERIE.DADOS.
         }
 
-        private double[,] Prever(double[,] dadosBase, double[,] dadosAuxiliares)
+        private double[,] Prever(double[,] dadosBase, double[,] dadosAuxiliares, int indiceID)
         {
             RNA.Network = (ActivationNetwork)ActivationNetwork.Load(@"C:\Users\Paulo\Desktop\NetworkTest.bin");
 
@@ -301,6 +304,8 @@ namespace GICA_RNA
             //variavel auxiliar para o id binário
             int contador = 0;
 
+            con = indiceID - RNA.WindowSize - 1;
+
              //inicia processo de predição deslocando de um por um os pontos previstos
             for (int i = 0, n = dadosBase.Length/2 + 1; i < n; i = i + RNA.PredictionSize)
             {
@@ -326,9 +331,7 @@ namespace GICA_RNA
                         }
                     }
                 }//fim do for interno
-
-
-
+                
                 for (int k = 0; k < RNA.Network.Compute(networkInput).Length; k++)
                 {
                     if ((i + k) < solutionSize)
@@ -340,7 +343,7 @@ namespace GICA_RNA
                 
             }//fim do for externo
 
-            diferencaInv = Serie.DiferencaInversa(diferenca, dadosAuxiliares[dadosAuxiliares.Length/2 - 1, 1]);
+            diferencaInv = Serie.DiferencaInversa(diferenca, Serie.Dados[indiceID, 1]);
 
             for (int b = 0; b < diferencaInv.Count - 1; b++)
                 solution[b, 1] = diferencaInv[b];
@@ -365,4 +368,4 @@ namespace GICA_RNA
 
         #endregion
     }
-}
+}*/

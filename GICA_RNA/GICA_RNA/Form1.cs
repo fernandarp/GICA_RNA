@@ -17,7 +17,6 @@ namespace GICA_RNA
 {
     public partial class Form1 : Form
     {
-        private Thread workerThread = null;
         List<double> dadosreais = new List<double>();
 
         public Form1()
@@ -27,7 +26,7 @@ namespace GICA_RNA
 
         private void TreinoButton_Click(object sender, EventArgs e)
         {
-            CPrevisao Previsao = new CPrevisao();
+            CRedeNeural Previsao = new CRedeNeural();
             List<double> dadosprevistos = new List<double>();
             Dados();
             dadosprevistos = Previsao.Previsao(dadosreais);
