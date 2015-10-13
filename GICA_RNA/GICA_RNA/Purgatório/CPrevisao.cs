@@ -18,6 +18,7 @@ namespace GICA_RNA
 {
     public class CPrevisao
     {
+
         #region Atributos privados
 
         //Variáveis de redes
