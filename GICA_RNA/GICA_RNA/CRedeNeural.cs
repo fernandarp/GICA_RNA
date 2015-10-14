@@ -135,8 +135,8 @@ namespace GICA_RNA
 
             //resultados
             List<double> resultTreino = new List<double>();        
-
-            TestarConfiguracoes();
+            
+TestarConfiguracoes();
 
             resultTreino = Treino();
             Teste();
@@ -146,7 +146,7 @@ namespace GICA_RNA
             result.AddRange(resultTeste);
 
 
-            return null;
+            return result;
         }
 
         public List<double> Treino()
