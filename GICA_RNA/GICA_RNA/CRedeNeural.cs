@@ -136,7 +136,7 @@ namespace GICA_RNA
             //resultados
             List<double> resultTreino = new List<double>();        
             
-TestarConfiguracoes();
+            TestarConfiguracoes();
 
             resultTreino = Treino();
             Teste();
