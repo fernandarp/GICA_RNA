@@ -33,10 +33,8 @@ namespace GICA_RNA
 
         public List<int> ids
         {
-
             get { return ids; }
-            set { if (ids != value) ids = value; }
-            
+            set { if (ids != value) ids = value; }            
         }
         public double[,] Dados
         {

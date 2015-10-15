@@ -23,7 +23,7 @@ namespace GICA_RNA
         private List<double> dadosTeste = new List<double>();  
 
         //Variáveis dos resultados relativos a previsão
-        private List<double> resultValidation = new List<double>();
+        private List<double> resultValidacao = new List<double>();
         private List<double> resultTeste = new List<double>();
         private List<double> result = new List<double>();
 
@@ -33,16 +33,7 @@ namespace GICA_RNA
         //Instância do objeto RedeNeural
         private CSerieTemporal Serie;
 
-        //Erros 
-        public double learningMAPE = 0.0;        
-        public double predictionMAPE = 0.0;
-        public double learningUtheil = 0.0;
-        public double predictionUtheil = 0.0;
-        public double learningError = 0.0;
-        public double predictionError = 0.0;
-        private double validationError = 0.0;
-        private double validationUtheil = 0.0;
-        private double validationMAPE = 0.0;
+        //Erros
         private double[] menoresErros = new double[3];
             
         //Configurações de rede
@@ -139,18 +130,24 @@ namespace GICA_RNA
             TestarConfiguracoes();
 
             resultTreino = Treino();
-            Teste();
+            resultTeste = Teste();
 
             result.AddRange(resultTreino);
-            result.AddRange(resultValidation);
+            result.AddRange(resultValidacao);
             result.AddRange(resultTeste);
-
 
             return result;
         }
 
         public List<double> Treino()
         {
+            double learningUtheil = 0.0;
+            double learningError = 0.0;
+
+            double validationError = 0.0;
+            double validationUtheil = 0.0;
+            double validationMAPE = 0.0;
+
             //setando o erro de comparação da validação em um valor extremo
             menoresErros[2] = 1000;
 
@@ -222,7 +219,6 @@ namespace GICA_RNA
             while (!needToStop)
             {
                 learningError = 0.0;
-                learningMAPE = 0.0;
                 learningUtheil = 0.0;
 
                 //roda uma iteração do processo de aprendizagem retornando o erro obtido
@@ -290,7 +286,7 @@ namespace GICA_RNA
 
                 // validação
                 if (iteration >= 30)
-                    Validacao();
+                    resultValidacao = Validacao();
 
                 // incrementa a iteração atual
                 iteration++;
@@ -307,17 +303,19 @@ namespace GICA_RNA
             return solution.ToList();
         }
 
-        public void Teste()
+        public List<double> Teste()
         {
-            predictionError = 0.0;
-            predictionMAPE = 0.0;
-            predictionUtheil = 0.0;
+            List<double> solution = new List<double>();
+
+            double predictionError = 0.0;
+            double predictionMAPE = 0.0;
+            double predictionUtheil = 0.0;
 
             double somaY = 0.0;
             double somaF = 0.0;
 
             int indice = dadosValidacao.Count + dadosTreino.Count;
-            resultTeste = Prever(dadosTeste, dadosValidacao, indice);
+            solution = Prever(dadosTeste, dadosValidacao, indice);
 
             int tamanho = Serie.Dados.Length / 2 - dadosTeste.Count - 1;
             int amostra = 0;
@@ -326,11 +324,11 @@ namespace GICA_RNA
             {
                 if (Serie.Dados[tamanho + i, 1] != 0)
                 {
-                    predictionError += ((resultTeste[i] - Serie.Dados[tamanho + i, 1]) * (resultTeste[i] - Serie.Dados[tamanho + i, 1]));
-                    predictionMAPE += Math.Abs(((Serie.Dados[tamanho + i, 1]) - resultTeste[i]) / (Serie.Dados[tamanho + i, 1]));
+                    predictionError += ((solution[i] - Serie.Dados[tamanho + i, 1]) * (solution[i] - Serie.Dados[tamanho + i, 1]));
+                    predictionMAPE += Math.Abs(((Serie.Dados[tamanho + i, 1]) - solution[i]) / (Serie.Dados[tamanho + i, 1]));
                     amostra++;
                     somaY += (Serie.Dados[tamanho + i, 1] * Serie.Dados[tamanho + i, 1]);
-                    somaF += (resultTeste[i] * resultTeste[i]);
+                    somaF += (solution[i] * solution[i]);
                 }
             }
 
@@ -340,6 +338,8 @@ namespace GICA_RNA
             somaY = somaY / amostra;
 
             predictionUtheil = Math.Sqrt(predictionError) / (Math.Sqrt(somaY) + Math.Sqrt(somaF));
+
+            return solution;
         }
 
         public void configuraRede()
@@ -459,11 +459,13 @@ namespace GICA_RNA
             return solution;
         }
 
-        private void Validacao()
+        private List<double> Validacao()
         {
-            validationError = 0.0;
-            validationMAPE = 0.0;
-            validationUtheil = 0.0;
+            double validationError = 0.0;
+            double validationMAPE = 0.0;
+            double validationUtheil = 0.0;
+
+            List<double> solution = new List<double>();
 
             //variaveis auxiliares para o calculo do utheil
             double somaF = 0.0;
@@ -506,8 +508,10 @@ namespace GICA_RNA
                 networkValidation = CUtil.DeepCopy(network);
 
                 //salva a solução da melhor configuração
-                resultValidation = resultValidationTemp;
+                solution = resultValidationTemp;
             }
+
+            return solution;
         }
 
         private void TestarConfiguracoes()
