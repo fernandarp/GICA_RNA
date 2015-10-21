@@ -11,7 +11,7 @@ namespace GICA_RNA
         #region Atributos
 
         private double[,] dadosXY;
-        public List<int> Ids;
+        private List<int> ids = new List<int>();
         private List<double> dados = new List<double>();
         private List<double> dadosDiferenca = new List<double>();        
         private int xInicial = 1;
@@ -31,7 +31,7 @@ namespace GICA_RNA
 
         #region Propriedades
 
-        public List<int> ids
+        public List<int> Ids
         {
             get { return ids; }
             set { if (ids != value) ids = value; }            

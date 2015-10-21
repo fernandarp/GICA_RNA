@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 using AForge.Neuro;
 using Accord.Neuro.Learning;
@@ -22,19 +23,13 @@ namespace GICA_RNA
         private List<double> dadosValidacao = new List<double>();
         private List<double> dadosTeste = new List<double>();  
 
-        //Variáveis dos resultados relativos a previsão
+        //Variáveis relativas a validação
         private List<double> resultValidacao = new List<double>();
-        private List<double> resultTeste = new List<double>();
-        private List<double> result = new List<double>();
-
-        //solução temporaria
         private List<double> resultValidationTemp = new List<double>();
+        private double[] menoresErros = new double[3];
 
         //Instância do objeto RedeNeural
-        private CSerieTemporal Serie;
-
-        //Erros
-        private double[] menoresErros = new double[3];
+        private CSerieTemporal Serie;        
             
         //Configurações de rede
         private List<int> neurons = null;
@@ -109,37 +104,54 @@ namespace GICA_RNA
         /// </summary>
         /// <param name="dados">Dados reais a serem trabalhados.</param>
         /// <param name="xInicial">Valor do indice inicial dos dados começando de 1. Default: 1.</param>
+        /// <param name="comparacaoteste">Variavel que determina se haverá comparação com dados reais de teste.</param>
         /// <returns></returns>
-        public List<double> Previsao(List<double> dados, int xInicial = 1)
+        public List<double> Previsao(List<double> dados, int xInicial = 1, bool comparacaoteste = true)
         {
-            //RNA.Algoritmo = "ParallelResilientBackpropagationLearning";      
+            //RNA.Algoritmo = "ParallelResilientBackpropagationLearning";  
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\RNA Archives";
+ 
+            //Variáveis que armazenarão resultados
+            List<double> result = new List<double>();
+            List<double> resultTeste = new List<double>();  
 
             //Instancia a classe CSerieTemporal.
             Serie = new CSerieTemporal(dados, xInicial);
 
             //Aplica a diferença nos dados e separa em treino, validação e teste.
-            Serie.PrepararDados(true);
+            Serie.PrepararDados(comparacaoteste);
 
+            //Separação dos dados
             dadosTreino = Serie.DadosTreino;
             dadosValidacao = Serie.DadosValidacao;
-            dadosTeste = Serie.DadosTeste;
+            if (comparacaoteste == true) dadosTeste = Serie.DadosTeste;
 
             //resultados
             List<double> resultTreino = new List<double>();        
             
             TestarConfiguracoes();
 
-            resultTreino = Treino();
-            resultTeste = Teste();
-
-            result.AddRange(resultTreino);
-            result.AddRange(resultValidacao);
-            result.AddRange(resultTeste);
+            //if (File.Exists(path + @"\RedeTreinada.bin") == false)
+            //{
+                //adiciona ao resultado final os resultados de treino, validacao e teste de maneira sequencial.
+                result.AddRange(Treino(path));
+                result.AddRange(resultValidacao);
+                //try
+                //{
+                //    network.Save(path + @"\RedeTreinada.bin");
+                //}
+                //catch { }
+            //}  
+            //else
+            //{
+            //    network = (ActivationNetwork)ActivationNetwork.Load(path + @"\RedeTreinada.bin");
+            //}
+            result.AddRange(Teste(dadosTeste.Count, comparacaoteste));
 
             return result;
         }
 
-        public List<double> Treino()
+        public List<double> Treino(string path)
         {
             double learningUtheil = 0.0;
             double learningError = 0.0;
@@ -286,7 +298,7 @@ namespace GICA_RNA
 
                 // validação
                 if (iteration >= 30)
-                    resultValidacao = Validacao();
+                    Validacao();
 
                 // incrementa a iteração atual
                 iteration++;
@@ -303,41 +315,50 @@ namespace GICA_RNA
             return solution.ToList();
         }
 
-        public List<double> Teste()
+        /// <summary>
+        /// Testa a rede neural para novos pontos.
+        /// </summary>
+        /// <param name="semanas">Quantidade de semanas a serem previstas.</param>
+        /// <param name="comparacao">Variável que indica se haverá comparação com dados reias.</param>
+        /// <returns></returns>
+        public List<double> Teste(int semanas, bool comparacao)
         {
             List<double> solution = new List<double>();
 
-            double predictionError = 0.0;
-            double predictionMAPE = 0.0;
-            double predictionUtheil = 0.0;
-
-            double somaY = 0.0;
-            double somaF = 0.0;
-
-            int indice = dadosValidacao.Count + dadosTreino.Count;
+            int indice = dadosValidacao.Count + semanas;
             solution = Prever(dadosTeste, dadosValidacao, indice);
 
-            int tamanho = Serie.Dados.Length / 2 - dadosTeste.Count - 1;
-            int amostra = 0;
-
-            for (int i = 0; i < dadosTeste.Count + 1; i++)
+            if (comparacao == true)
             {
-                if (Serie.Dados[tamanho + i, 1] != 0)
+                double predictionError = 0.0;
+                double predictionMAPE = 0.0;
+                double predictionUtheil = 0.0;
+
+                double somaY = 0.0;
+                double somaF = 0.0;
+
+                int tamanho = Serie.Dados.Length / 2 - dadosTeste.Count - 1;
+                int amostra = 0;
+
+                for (int i = 0; i < dadosTeste.Count + 1; i++)
                 {
-                    predictionError += ((solution[i] - Serie.Dados[tamanho + i, 1]) * (solution[i] - Serie.Dados[tamanho + i, 1]));
-                    predictionMAPE += Math.Abs(((Serie.Dados[tamanho + i, 1]) - solution[i]) / (Serie.Dados[tamanho + i, 1]));
-                    amostra++;
-                    somaY += (Serie.Dados[tamanho + i, 1] * Serie.Dados[tamanho + i, 1]);
-                    somaF += (solution[i] * solution[i]);
+                    if (Serie.Dados[tamanho + i, 1] != 0)
+                    {
+                        predictionError += ((solution[i] - Serie.Dados[tamanho + i, 1]) * (solution[i] - Serie.Dados[tamanho + i, 1]));
+                        predictionMAPE += Math.Abs(((Serie.Dados[tamanho + i, 1]) - solution[i]) / (Serie.Dados[tamanho + i, 1]));
+                        amostra++;
+                        somaY += (Serie.Dados[tamanho + i, 1] * Serie.Dados[tamanho + i, 1]);
+                        somaF += (solution[i] * solution[i]);
+                    }
                 }
+
+                predictionError = (predictionError) / amostra;
+                predictionMAPE = predictionMAPE / amostra;
+                somaF = somaF / amostra;
+                somaY = somaY / amostra;
+
+                predictionUtheil = Math.Sqrt(predictionError) / (Math.Sqrt(somaY) + Math.Sqrt(somaF));
             }
-
-            predictionError = (predictionError) / amostra;
-            predictionMAPE = predictionMAPE / amostra;
-            somaF = somaF / amostra;
-            somaY = somaY / amostra;
-
-            predictionUtheil = Math.Sqrt(predictionError) / (Math.Sqrt(somaY) + Math.Sqrt(somaF));
 
             return solution;
         }
@@ -459,14 +480,12 @@ namespace GICA_RNA
             return solution;
         }
 
-        private List<double> Validacao()
+        private void Validacao()
         {
             double validationError = 0.0;
             double validationMAPE = 0.0;
             double validationUtheil = 0.0;
-
-            List<double> solution = new List<double>();
-
+            
             //variaveis auxiliares para o calculo do utheil
             double somaF = 0.0;
             double somaY = 0.0;
@@ -508,10 +527,8 @@ namespace GICA_RNA
                 networkValidation = CUtil.DeepCopy(network);
 
                 //salva a solução da melhor configuração
-                solution = resultValidationTemp;
+                resultValidacao = resultValidationTemp;
             }
-
-            return solution;
         }
 
         private void TestarConfiguracoes()
